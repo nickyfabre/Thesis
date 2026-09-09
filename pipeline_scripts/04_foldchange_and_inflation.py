@@ -244,18 +244,12 @@ def main():
         df_run = df_clean[df_clean["run"] == run].copy()
         cond = df_run["condition"].iloc[0]
 
-        df_run_unique = df_run[df_run["num_descendants"] == 1].copy()
-        df_run_unique["species_label"] = df_run_unique["tree_node"].map(lambda n: node_to_desc[n][0])
-
-        abundances = df_run_unique.groupby("species_label")["intensity_ppm"].sum().to_dict()
-
         all_labels_in_run = set()
         for d in df_run["tree_node"].map(lambda n: node_to_desc.get(n, [])):
             all_labels_in_run.update(d)
 
-        for label in all_labels_in_run:
-            if label not in abundances:
-                abundances[label] = 1e-9
+        initial_val = 1.0 / len(all_labels_in_run) if all_labels_in_run else 1.0
+        abundances = {label: initial_val for label in all_labels_in_run}
 
         for iteration in range(max_iters):
             prev_abundances = abundances.copy()
@@ -338,9 +332,24 @@ def main():
     mix_sum_wide = mix_avg_sum.pivot_table(index="species_label", columns="condition", values="split_intensity", fill_value=0.0).reset_index()
 
     # ==========================================================================
+    # UTILITY: WEIGHTED MEDIAN
+    # ==========================================================================
+    def weighted_median(data, weights):
+        """Calculates the weighted median of data."""
+        if len(data) == 0:
+            return np.nan
+        df_wm = pd.DataFrame({'data': data, 'weights': weights}).dropna()
+        if df_wm.empty:
+            return np.nan
+        df_wm = df_wm.sort_values('data')
+        cumsum = df_wm['weights'].cumsum()
+        cutoff = df_wm['weights'].sum() / 2.0
+        return df_wm[cumsum >= cutoff]['data'].iloc[0]
+
+    # ==========================================================================
     # BENCHMARK COMPARISON ASSEMBLY & EVALUATION FOR LOG2 FOLD CHANGE
     # ==========================================================================
-    print("Calculating observed vs. expected log2 fold changes...")
+    print("Calculating observed vs. expected log2 fold changes (Weighted Median)...")
     eps = 1e-8
     all_fc_rows = []
 
@@ -372,7 +381,9 @@ def main():
                 p_den = node_peps_u[den_cond]
                 valid = (p_num > 0) & (p_den > 0)
                 if valid.any():
-                    unique_fc = np.median(np.log2(p_num[valid] / p_den[valid]))
+                    fcs = np.log2(p_num[valid] / p_den[valid])
+                    weights = (p_num[valid] + p_den[valid]) / 2.0
+                    unique_fc = weighted_median(fcs, weights)
                     is_excl_u = False
                 else:
                     unique_fc = np.nan
@@ -396,7 +407,9 @@ def main():
             p_den = node_peps_l[den_cond]
             valid = (p_num > 0) & (p_den > 0)
             if valid.any():
-                lca_fc = np.median(np.log2(p_num[valid] / p_den[valid]))
+                fcs = np.log2(p_num[valid] / p_den[valid])
+                weights = (p_num[valid] + p_den[valid]) / 2.0
+                lca_fc = weighted_median(fcs, weights)
                 is_excl_l = False
             else:
                 lca_fc = np.nan
@@ -409,7 +422,9 @@ def main():
                 p_den = node_peps_m[den_cond]
                 valid = (p_num > 0) & (p_den > 0)
                 if valid.any():
-                    mix_fc = np.median(np.log2(p_num[valid] / p_den[valid]))
+                    fcs = np.log2(p_num[valid] / p_den[valid])
+                    weights = (p_num[valid] + p_den[valid]) / 2.0
+                    mix_fc = weighted_median(fcs, weights)
                     is_excl_m = False
                 else:
                     mix_fc = np.nan

@@ -242,19 +242,14 @@ def main():
         df_run = df_clean[df_clean["run"] == run].copy()
         cond = df_run["condition"].iloc[0]
 
-        # Initial M-step: Set initial species abundances using unique peptides
-        df_run_unique = df_run[df_run["num_descendants"] == 1].copy()
-        df_run_unique["species_label"] = df_run_unique["tree_node"].map(lambda n: node_to_desc[n][0])
-
-        abundances = df_run_unique.groupby("species_label")["intensity_ppm"].sum().to_dict()
-
+        # Initial M-step: Uniform initialization
         all_labels_in_run = set()
         for d in df_run["tree_node"].map(lambda n: node_to_desc.get(n, [])):
             all_labels_in_run.update(d)
 
-        for label in all_labels_in_run:
-            if label not in abundances:
-                abundances[label] = 1e-9 # Small non-zero start if no unique peptides
+        # Give all species an equal starting probability so no one is trapped at 0
+        initial_val = 1.0 / len(all_labels_in_run) if all_labels_in_run else 1.0
+        abundances = {label: initial_val for label in all_labels_in_run}
 
         # EM Loop
         for iteration in range(max_iters):
