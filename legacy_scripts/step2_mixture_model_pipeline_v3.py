@@ -521,29 +521,167 @@ def main():
     print(f"[SUCCESS] 3x3 Benchmark plot matrix saved to: {plot_path}")
 
     # ==========================================================================
-    # CONSOLE DIAGNOSTIC BENCHMARK SUMMARY
+    # CONSOLE DIAGNOSTIC BENCHMARK SUMMARY & ERROR METRICS
     # ==========================================================================
     print("\n" + "="*85)
-    print("           METAPROTEOMICS QUANTIFICATION METHODOLOGY COMPARATIVE BENCHMARK (V2)")
+    print("           METAPROTEOMICS QUANTIFICATION METHODOLOGY COMPARATIVE BENCHMARK (V3)")
     print("="*85)
+
+    # Store metrics for plotting
+    metrics_records = []
+
     for cond in conditions:
         sub = eval_df[(eval_df["Condition"] == cond) & (eval_df["Expected_Pct"] > 0.0)].copy()
         
         print(f"\nCondition: {cond}")
-        print("-" * 50)
+        print("-" * 75)
         
         for col_name, title, _ in methods:
-            valid = sub[sub[col_name] > 0.0]
-            # Calculate Log Pearson
-            log_pears = np.log10(valid["Expected_Pct"]).corr(np.log10(valid[col_name]), method="pearson")
-            log_spear = np.log10(valid["Expected_Pct"]).corr(np.log10(valid[col_name]), method="spearman")
+            # We use all valid expected > 0 for error metrics, not just those where measured > 0,
+            # to penalize methods that completely fail to quantify an expected species (measured=0).
+            expected_vals = sub["Expected_Pct"]
+            measured_vals = sub[col_name]
+
+            # Calculate MAE and RMSE
+            mae = np.mean(np.abs(expected_vals - measured_vals))
+            rmse = np.sqrt(np.mean((expected_vals - measured_vals)**2))
+
+            valid_log = sub[sub[col_name] > 0.0]
+            if not valid_log.empty:
+                # Calculate Log Pearson
+                log_pears = np.log10(valid_log["Expected_Pct"]).corr(np.log10(valid_log[col_name]), method="pearson")
+                log_spear = np.log10(valid_log["Expected_Pct"]).corr(np.log10(valid_log[col_name]), method="spearman")
+
+                # Leaves only
+                leaves = valid_log[valid_log["Node_Type"] == "Leaf"]
+                r_leaves = np.log10(leaves["Expected_Pct"]).corr(np.log10(leaves[col_name]), method="pearson") if len(leaves) > 2 else np.nan
+            else:
+                log_pears, log_spear, r_leaves = np.nan, np.nan, np.nan
             
-            # Leaves only
-            leaves = valid[valid["Node_Type"] == "Leaf"]
-            r_leaves = np.log10(leaves["Expected_Pct"]).corr(np.log10(leaves[col_name]), method="pearson") if len(leaves) > 2 else np.nan
             
-            print(f"  -> {title.split(' ')[0]:<14} | Total Nodes Pearson r: {log_pears:.4f} | Spearman R: {log_spear:.4f} | Leaves Pearson r: {r_leaves:.4f}")
+            # Calculate Coefficient of Variation (CV)
+            cv = np.std(measured_vals) / np.mean(measured_vals) * 100 if np.mean(measured_vals) > 0 else np.nan
+
+            method_short = title.split(' ')[0]
+            print(f"  -> {method_short:<14} | Pearson r: {log_pears:6.4f} | MAE: {mae:6.2f}% | RMSE: {rmse:6.2f}% | CV: {cv:6.2f}%")
+
+            metrics_records.append({
+                "Condition": cond,
+                "Method": method_short,
+                "MAE": mae,
+                "RMSE": rmse,
+                "Pearson_R": log_pears,
+                "CV": cv
+            })
+
     print("="*85 + "\n")
+
+    # ==========================================================================
+    # ERROR METRICS VISUALIZATION (MAE/RMSE Bar Charts)
+    # ==========================================================================
+    print("Generating Error Metrics Visualization (MAE & RMSE)...")
+    metrics_df = pd.DataFrame(metrics_records)
+    metrics_df.to_csv(outdir / "step2_mixture_model_error_metrics.csv", index=False)
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
+
+    # Set up bar positions
+    x = np.arange(len(conditions))
+    width = 0.25
+
+    method_labels = [m[1].split(' ')[0] for m in methods]
+    colors = ['#1f77b4', '#ff7f0e', '#2ca02c'] # Blue, Orange, Green matching the scatterplots
+
+    for i, method_short in enumerate(method_labels):
+        method_data = metrics_df[metrics_df["Method"] == method_short]
+
+        # MAE Bars
+        rects1 = ax1.bar(x + (i - 1) * width, method_data["MAE"], width, label=method_short, color=colors[i], edgecolor='black')
+        # RMSE Bars
+        rects2 = ax2.bar(x + (i - 1) * width, method_data["RMSE"], width, label=method_short, color=colors[i], edgecolor='black')
+
+        # Add values on top of bars
+        ax1.bar_label(rects1, padding=3, fmt='%.1f')
+        ax2.bar_label(rects2, padding=3, fmt='%.1f')
+
+    # Formatting MAE plot
+    ax1.set_ylabel('Mean Absolute Error (%)', fontweight="bold")
+    ax1.set_title('Mean Absolute Error (MAE) by Condition', fontweight="bold")
+    ax1.set_xticks(x)
+    ax1.set_xticklabels(conditions)
+    ax1.legend()
+    ax1.grid(axis='y', linestyle='--', alpha=0.7)
+
+    # Formatting RMSE plot
+    ax2.set_ylabel('Root Mean Square Error (%)', fontweight="bold")
+    ax2.set_title('Root Mean Square Error (RMSE) by Condition', fontweight="bold")
+    ax2.set_xticks(x)
+    ax2.set_xticklabels(conditions)
+    ax2.legend()
+    ax2.grid(axis='y', linestyle='--', alpha=0.7)
+
+    plt.suptitle("Error Metrics Benchmark: Lower Error indicates better quantification accuracy", fontsize=14, fontweight="bold")
+    plt.tight_layout()
+
+    error_plot_path = outdir / "step2_mixture_model_error_barchart.png"
+    plt.savefig(error_plot_path, dpi=150, bbox_inches="tight")
+    plt.close()
+    print(f"[SUCCESS] Error metrics bar chart saved to: {error_plot_path}")
+
+    # ==========================================================================
+    # ERROR METRICS VISUALIZATION (Bland-Altman/Residuals Plot)
+    # ==========================================================================
+    print("Generating Residuals Plot...")
+
+    fig, axs = plt.subplots(1, 3, figsize=(18, 6), sharey=True)
+
+    for i, (col_name, method_title, color) in enumerate(zip([m[0] for m in methods], method_labels, colors)):
+        ax = axs[i]
+
+        # Gather data for this method across all conditions
+        all_expected = []
+        all_diffs = []
+
+        for cond in conditions:
+            sub = eval_df[(eval_df["Condition"] == cond) & (eval_df["Expected_Pct"] > 0.0)]
+            expected = sub["Expected_Pct"]
+            measured = sub[col_name]
+            diff = measured - expected
+
+            # Use scatter for each point
+            ax.scatter(expected, diff, label=cond, alpha=0.7, edgecolor='black', s=50)
+
+            all_expected.extend(expected.tolist())
+            all_diffs.extend(diff.tolist())
+
+        # Draw a horizontal line at 0 (perfect agreement)
+        ax.axhline(0, color='red', linestyle='--', linewidth=2, label='Perfect Agreement')
+
+        # Calculate overall mean difference and limits of agreement
+        if all_diffs:
+            mean_diff = np.mean(all_diffs)
+            std_diff = np.std(all_diffs)
+
+            ax.axhline(mean_diff, color='black', linestyle='-', linewidth=1.5, alpha=0.5, label=f'Mean Bias ({mean_diff:.1f}%)')
+            ax.axhline(mean_diff + 1.96*std_diff, color='gray', linestyle=':', linewidth=1.5, alpha=0.5, label='+1.96 SD')
+            ax.axhline(mean_diff - 1.96*std_diff, color='gray', linestyle=':', linewidth=1.5, alpha=0.5, label='-1.96 SD')
+
+        ax.set_title(f'{method_title} Residuals', fontweight="bold")
+        ax.set_xlabel('Expected Abundance (%)', fontweight="bold")
+        if i == 0:
+            ax.set_ylabel('Difference (Measured - Expected) %', fontweight="bold")
+        ax.grid(True, linestyle='--', alpha=0.4)
+        if i == 2:
+            # Only put legend on the last plot so it doesn't clutter all of them
+            ax.legend(loc='upper right', fontsize='small')
+
+    plt.suptitle("Residuals Analysis: Agreement between Measured and Expected Abundances", fontsize=14, fontweight="bold")
+    plt.tight_layout()
+
+    residuals_plot_path = outdir / "step2_mixture_model_residuals_plot.png"
+    plt.savefig(residuals_plot_path, dpi=150, bbox_inches="tight")
+    plt.close()
+    print(f"[SUCCESS] Residuals plot saved to: {residuals_plot_path}")
 
 if __name__ == "__main__":
     main()
