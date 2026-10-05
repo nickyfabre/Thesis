@@ -1,0 +1,5 @@
+Label,Species,Input Protein Amount in C (ug) normalized,Input Protein Amount in P (ug) normalized,Input Protein Amount in U (ug) normalized
+CRH,Homo sapiens,1000,1000,1000
+ATN,Mus musculus,500,1000,1500
+K12,Escherichia coli,200,200,200
+LT2,Salmonella enterica,100,500,1000
