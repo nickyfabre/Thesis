@@ -1,0 +1,13 @@
+Dataset,Subset,Comparison,Diff_Estimate,Std_Err,z_stat,p_value,CI_Lower,CI_Upper,q_value_FDR
+Abundance,Overall,Rigid vs Mixture,-2.7755575615628914e-17,,,,,,1.0
+Abundance,Overall,Unique vs Mixture,-2.775557561562891e-17,,,,,,1.0
+Abundance,Constant,Rigid vs Mixture,0.0,,,,,,1.0
+Abundance,Constant,Unique vs Mixture,0.0,,,,,,1.0
+Abundance,Protein,Rigid vs Mixture,0.0,,,,,,1.0
+Abundance,Protein,Unique vs Mixture,0.0,,,,,,1.0
+Abundance,Uneven,Rigid vs Mixture,0.0,,,,,,1.0
+Abundance,Uneven,Unique vs Mixture,0.0,,,,,,1.0
+FoldChange,Overall,Rigid vs Mixture,1.2960402298246115e-17,1.1648815001427903e-17,1.1125940532712932,0.2658828156190156,-9.870855567122472e-18,3.57916601636147e-17,1.0
+FoldChange,Overall,Unique vs Mixture,1.2996291201947947e-17,1.1648815001427903e-17,1.1156749592430537,0.26456129296947817,-9.83496666342064e-18,3.582754906731653e-17,1.0
+FoldChange,Uneven_vs_Constant,Rigid vs Mixture,0.0,,,,,,1.0
+FoldChange,Uneven_vs_Constant,Unique vs Mixture,0.0,,,,,,1.0

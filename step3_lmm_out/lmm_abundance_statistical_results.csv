@@ -1,0 +1,9 @@
+Dataset,Subset,Comparison,Diff_Estimate,Std_Err,z_stat,p_value,CI_Lower,CI_Upper
+Abundance,Overall,Rigid vs Mixture,-2.7755575615628914e-17,,,,,
+Abundance,Overall,Unique vs Mixture,-2.775557561562891e-17,,,,,
+Abundance,Constant,Rigid vs Mixture,0.0,,,,,
+Abundance,Constant,Unique vs Mixture,0.0,,,,,
+Abundance,Protein,Rigid vs Mixture,0.0,,,,,
+Abundance,Protein,Unique vs Mixture,0.0,,,,,
+Abundance,Uneven,Rigid vs Mixture,0.0,,,,,
+Abundance,Uneven,Unique vs Mixture,0.0,,,,,
