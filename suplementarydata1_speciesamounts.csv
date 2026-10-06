@@ -1,0 +1,5 @@
+Label,Species,Input Protein Amount in C (ug) normalized,Input Protein Amount in P (ug) normalized,Input Protein Amount in U (ug) normalized
+CRH,Corynebacterium diphtheriae,1.0,1.0,1.0
+ATN,Actinomyces neuii,1.0,1.0,1.0
+K12,Escherichia coli,1.0,1.0,1.0
+LT2,Salmonella enterica,1.0,1.0,1.0

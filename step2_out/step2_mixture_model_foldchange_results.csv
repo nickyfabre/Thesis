@@ -1,0 +1,7 @@
+Node,Node_Type,Num_Species,Comparison,Expected_Log2FC,Unique_Log2FC,Unique_Excluded,LCA_Log2FC,LCA_Excluded,Mix_Log2FC,Mix_Excluded
+CRH,Leaf,1,Uneven_vs_Constant,0.0,0.10606436213779286,False,0.10606436213779286,False,0.10606436213779286,False
+CRH,Leaf,1,Protein_vs_Constant,0.0,0.07503154549683895,False,0.07503154549683895,False,0.07503154549683895,False
+CRH,Leaf,1,Uneven_vs_Protein,0.0,0.03103281664095381,False,0.03103281664095381,False,0.03103281664095381,False
+Enterobacteriaceae,Internal Node,2,Uneven_vs_Constant,0.0,,True,0.16976424586494657,False,0.16976424586494626,False
+Enterobacteriaceae,Internal Node,2,Protein_vs_Constant,0.0,,True,-0.1626236260890616,False,-0.1626236260890616,False
+Enterobacteriaceae,Internal Node,2,Uneven_vs_Protein,0.0,,True,0.3323878719540083,False,0.33238787195400804,False

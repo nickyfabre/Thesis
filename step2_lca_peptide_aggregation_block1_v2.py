@@ -155,11 +155,11 @@ def create_mock_quantms_table(out_path: Path):
     rows = []
     # Mix of unique and shared peptides across various runs
     peptides = [
-        ("PEPTIDE_UNIQUE_CRH", "CRH_XP_001696798.1"),
-        ("PEPTIDE_UNIQUE_ATN", "ATN_protein_1"),
-        ("PEPTIDE_SHARED_CRH_ATN", "CRH_XP_001696798.1;ATN_protein_1"),
-        ("PEPTIDE_SHARED_ALL_ENT", "K12_protein_1;LT2_protein_1"), # Escherichia (K12) and Salmonella (LT2) -> Enterobacteriaceae
-        ("PEPTIDE_DECOY_TEST", "DECOY_CRH_XP_001696798.1")
+        ("ACDEFGHIK", "CRH_XP_001696798.1"),
+        ("LMNPQRSTV", "ATN_protein_1"),
+        ("WYYACDEFGH", "CRH_XP_001696798.1;ATN_protein_1"),
+        ("IKLMNPQRSTV", "K12_protein_1;LT2_protein_1"), # Escherichia (K12) and Salmonella (LT2) -> Enterobacteriaceae
+        ("DECOY_ACDEFGHIK", "DECOY_CRH_XP_001696798.1")
     ]
     
     # Simulate 24 runs (conditions: Constant, Protein, Uneven)

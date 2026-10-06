@@ -22,33 +22,38 @@ def calculate_native_detectability(seq: str) -> float:
     if not seq or any(c not in AA_GRAVY for c in seq):
         return 0.5 # Default fallback for modified or invalid sequences
     
-    # 1. Length factor: Tryptic peptides fly best between 7 and 25 residues
+    # 1. Length factor: Tryptic peptides fly best between 7 and 20 residues
     length = len(seq)
-    if length < 6:
-        len_score = 0.2
-    elif length <= 15:
-        len_score = 0.9
-    elif length <= 25:
-        len_score = 0.7
+    if 7 <= length <= 20:
+        len_score = 0.95
+    elif length < 7:
+        len_score = 0.3
     else:
         len_score = 0.4
         
     # 2. Hydrophobicity (GRAVY) factor: Extreme hydrophobicity or hydrophilicity reduces flight
     gravy = sum(AA_GRAVY[aa] for aa in seq) / length
-    # Optimal GRAVY is typically close to neutral-to-slightly hydrophobic (-0.5 to 1.0)
-    if -0.5 <= gravy <= 1.0:
+    # Optimal GRAVY is typically close to neutral-to-slightly hydrophobic (-0.5 to 0.5)
+    if -0.5 <= gravy <= 0.5:
         gravy_score = 0.95
-    elif -1.5 <= gravy < -0.5 or 1.0 < gravy <= 2.0:
+    elif -1.5 <= gravy < -0.5 or 0.5 < gravy <= 1.5:
         gravy_score = 0.60
     else:
         gravy_score = 0.25
         
     # 3. Mass Spectrometry Friendly Residues: Proline (P) and hydrophobic C-termini fly well.
-    # High counts of Acidic residues (D, E) or internal Basic residues (without cleavage) can reduce positive ionization.
+    # Basic residues (K, R, H) enhance positive ionization, while acidic residues (D, E) neutralize charge.
     p_count = seq.count('P')
     e_count = seq.count('E')
     d_count = seq.count('D')
-    ionized_score = 0.5 + (0.1 * p_count) - (0.05 * (e_count + d_count))
+    k_count = seq.count('K')
+    r_count = seq.count('R')
+    h_count = seq.count('H')
+
+    basic_count = k_count + r_count + h_count
+    acidic_count = e_count + d_count
+
+    ionized_score = 0.5 + (0.1 * p_count) + (0.1 * basic_count) - (0.1 * acidic_count)
     ionized_score = max(0.2, min(1.0, ionized_score))
     
     # Combine scores into a final probability-like detectability metric [0.1, 1.0]
