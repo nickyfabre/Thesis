@@ -1,0 +1,5 @@
+step2_out/
+step3_lmm_out/
+fileSDRF_*.tsv
+suplementarydata1_speciesamounts.csv
+taxdump.tar.gz
