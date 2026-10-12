@@ -22,11 +22,11 @@ def calculate_native_detectability(seq: str) -> float:
     if not seq or any(c not in AA_GRAVY for c in seq):
         return 0.5 # Default fallback for modified or invalid sequences
     
-    # 1. Length factor: Tryptic peptides fly best between 7 and 25 residues
+    # 1. Length factor: Tryptic peptides fly best between 7 and 20 residues
     length = len(seq)
-    if length < 6:
+    if length < 7:
         len_score = 0.2
-    elif length <= 15:
+    elif length <= 20:
         len_score = 0.9
     elif length <= 25:
         len_score = 0.7
@@ -44,11 +44,14 @@ def calculate_native_detectability(seq: str) -> float:
         gravy_score = 0.25
         
     # 3. Mass Spectrometry Friendly Residues: Proline (P) and hydrophobic C-termini fly well.
-    # High counts of Acidic residues (D, E) or internal Basic residues (without cleavage) can reduce positive ionization.
+    # High counts of Acidic residues (D, E) reduce positive ionization. Basic residues (K, R, H) increase positive ionization.
     p_count = seq.count('P')
     e_count = seq.count('E')
     d_count = seq.count('D')
-    ionized_score = 0.5 + (0.1 * p_count) - (0.05 * (e_count + d_count))
+    k_count = seq.count('K')
+    r_count = seq.count('R')
+    h_count = seq.count('H')
+    ionized_score = 0.5 + (0.1 * p_count) - (0.05 * (e_count + d_count)) + (0.05 * (k_count + r_count + h_count))
     ionized_score = max(0.2, min(1.0, ionized_score))
     
     # Combine scores into a final probability-like detectability metric [0.1, 1.0]

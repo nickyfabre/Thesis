@@ -155,11 +155,11 @@ def create_mock_quantms_table(out_path: Path):
     rows = []
     # Mix of unique and shared peptides across various runs
     peptides = [
-        ("PEPTIDE_UNIQUE_CRH", "CRH_XP_001696798.1"),
-        ("PEPTIDE_UNIQUE_ATN", "ATN_protein_1"),
-        ("PEPTIDE_SHARED_CRH_ATN", "CRH_XP_001696798.1;ATN_protein_1"),
-        ("PEPTIDE_SHARED_ALL_ENT", "K12_protein_1;LT2_protein_1"), # Escherichia (K12) and Salmonella (LT2) -> Enterobacteriaceae
-        ("PEPTIDE_DECOY_TEST", "DECOY_CRH_XP_001696798.1")
+        ("PEPTIDEAKK", "CRH_XP_001696798.1"),
+        ("PEPTIDEAMM", "ATN_protein_1"),
+        ("PEPTIDEADD", "CRH_XP_001696798.1;ATN_protein_1"),
+        ("PEPTIDEARR", "K12_protein_1;LT2_protein_1"), # Escherichia (K12) and Salmonella (LT2) -> Enterobacteriaceae
+        ("PEPTIDEAQQ", "DECOY_CRH_XP_001696798.1")
     ]
     
     # Simulate 24 runs (conditions: Constant, Protein, Uneven)
@@ -183,7 +183,7 @@ def create_mock_quantms_table(out_path: Path):
 def main():
     ap = argparse.ArgumentParser(description="Step 2: LCA Peptide Allocation - Block 1 (V2 - 3-Letter Code Labels)")
     ap.add_argument("--quant_table", default="fileSDRF_Run_1_2.sdrf_openms_design_triqler_in.tsv")
-    ap.add_argument("--known", default="/workspace/knowledge/suplementarydata1_speciesamounts.csv")
+    ap.add_argument("--known", default="suplementarydata1_speciesamounts.csv")
     ap.add_argument("--outdir", default="./step2_out")
     args = ap.parse_args()
     
